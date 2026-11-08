@@ -2,6 +2,8 @@
 from pathlib import Path
 import pandas as pd
 
+from churn_predict import BASE
+
 # Project paths
 # BASE = Path(__file__).resolve().parent
 CLEAN = BASE / "data" / "clean"
