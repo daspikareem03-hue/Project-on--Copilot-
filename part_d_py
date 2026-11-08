@@ -1,0 +1,540 @@
+"""
+Part D: Policy RAG Assistant and Simulated Refund Agent
+Place this file at project root: part_d.py
+"""
+
+from pathlib import Path
+import json
+import sqlite3
+import time
+import uuid
+from datetime import datetime, timezone
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+import mock_llm
+
+
+BASE = Path(__file__).resolve().parent
+POLICY_DIR = BASE / "data" / "policies"
+EVAL_FILE = BASE / "data" / "raw" / "policy_eval.csv"
+DB_PATH = BASE / "data" / "instamart.db"
+LEDGER_PATH = BASE / "outputs" / "refund_ledger.jsonl"
+STATE_DIR = BASE / "state"
+OUTPUT_DIR = BASE / "outputs"
+AGENT_RUNS_PATH = OUTPUT_DIR / "agent_runs.jsonl"
+
+for directory in (LEDGER_PATH.parent, STATE_DIR, OUTPUT_DIR):
+    directory.mkdir(parents=True, exist_ok=True)
+
+
+# -------------------------
+# Task 1: policy chunking
+# -------------------------
+
+def chunk_text(text, chunk_size=40, overlap=10):
+    words = text.split()
+    chunks = []
+    start = 0
+
+    while start < len(words):
+        end = start + chunk_size
+        chunks.append(" ".join(words[start:end]))
+        if end >= len(words):
+            break
+        start += chunk_size - overlap
+
+    return chunks
+
+
+all_chunks = []
+for file_path in sorted(POLICY_DIR.glob("*.txt")):
+    for chunk in chunk_text(file_path.read_text(encoding="utf-8")):
+        all_chunks.append({"source": file_path.name, "text": chunk})
+
+print("Total chunks:", len(all_chunks))
+for source in sorted({chunk["source"] for chunk in all_chunks}):
+    print(source, ":", sum(1 for chunk in all_chunks if chunk["source"] == source))
+
+
+# -------------------------
+# Task 2: TF-IDF retrieval
+# -------------------------
+
+chunk_texts = [chunk["text"] for chunk in all_chunks]
+vectorizer = TfidfVectorizer()
+tfidf_matrix = vectorizer.fit_transform(chunk_texts)
+
+
+def retrieve(query, k=3):
+    query_vector = vectorizer.transform([query])
+    scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
+    ranked_indices = scores.argsort()[::-1][:k]
+
+    return [
+        {
+            "source": all_chunks[index]["source"],
+            "score": float(scores[index]),
+            "text": all_chunks[index]["text"],
+        }
+        for index in ranked_indices
+    ]
+
+
+# -------------------------
+# Task 3: RAG policy assistant
+# -------------------------
+
+def answer(question):
+    results = retrieve(question, k=3)
+    context = "\n".join(
+        f'[{item["source"]}]\n{item["text"]}' for item in results
+    )
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "POLICY ASSISTANT. Answer the question only using the supplied "
+                "context. Do not use outside knowledge. If the context does not "
+                "contain the answer, say 'I could not find the information in "
+                "the supplied policy documents.'"
+            ),
+        },
+        {
+            "role": "user",
+            "content": f"CONTEXT:\n{context}\nQUESTION:\n{question}",
+        },
+    ]
+    response = mock_llm.chat(messages)
+    return {
+        "answer": response.choices[0].message.content,
+        "sources": list(dict.fromkeys(item["source"] for item in results)),
+    }
+
+
+# -------------------------
+# Task 4: evaluation
+# -------------------------
+
+def build_retriever(overlap):
+    chunks = []
+    for file_path in sorted(POLICY_DIR.glob("*.txt")):
+        words = file_path.read_text(encoding="utf-8").split()
+        start = 0
+
+        while start < len(words):
+            end = start + 40
+            chunks.append({
+                "source": file_path.name,
+                "text": " ".join(words[start:end]),
+            })
+            if end >= len(words):
+                break
+            start += 40 - overlap
+
+    texts = [chunk["text"] for chunk in chunks]
+    vec = TfidfVectorizer()
+    matrix = vec.fit_transform(texts)
+    return chunks, vec, matrix
+
+
+def retrieve_from(query, chunks, vec, matrix, k=3):
+    query_vector = vec.transform([query])
+    scores = cosine_similarity(query_vector, matrix).flatten()
+    ranked = scores.argsort()[::-1][:k]
+
+    return [
+        {
+            "source": chunks[index]["source"],
+            "score": float(scores[index]),
+            "text": chunks[index]["text"],
+        }
+        for index in ranked
+    ]
+
+
+def answer_from(question, chunks, vec, matrix):
+    results = retrieve_from(question, chunks, vec, matrix, k=3)
+    context = "\n".join(
+        f'[{item["source"]}]\n{item["text"]}' for item in results
+    )
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "POLICY ASSISTANT. Answer only from the supplied context. If "
+                "the information is not found, say 'I could not find the "
+                "information in the supplied policy documents.'"
+            ),
+        },
+        {
+            "role": "user",
+            "content": f"CONTEXT:\n{context}\nQUESTION:\n{question}",
+        },
+    ]
+    response = mock_llm.chat(messages)
+    return response.choices[0].message.content, results
+
+
+def evaluate(overlap):
+    chunks, vec, matrix = build_retriever(overlap)
+    df = pd.read_csv(EVAL_FILE).fillna("")
+    answerable_doc_hits = 0
+    answerable_fact_hits = 0
+    unanswerable_fallback_hits = 0
+    failures = []
+
+    for _, row in df.iterrows():
+        question = row["question"]
+        expected_doc = row["expected_doc"]
+        expected_fact = row["expected_fact"]
+        answer_text, results = answer_from(question, chunks, vec, matrix)
+        sources = [item["source"] for item in results]
+
+        if expected_doc == "NONE":
+            if answer_text.startswith("I could not find"):
+                unanswerable_fallback_hits += 1
+            else:
+                failures.append({
+                    "question": question,
+                    "reason": "Unanswerable question did not get fallback",
+                })
+        else:
+            doc_hit = expected_doc in sources
+            fact_hit = expected_fact in answer_text
+            answerable_doc_hits += int(doc_hit)
+            answerable_fact_hits += int(fact_hit)
+
+            if not doc_hit or not fact_hit:
+                failures.append({
+                    "question": question,
+                    "doc_hit": doc_hit,
+                    "fact_hit": fact_hit,
+                })
+
+    print(f"\nEvaluation with overlap = {overlap}")
+    print("Chunks:", len(chunks))
+    print("Answerable document hits:", answerable_doc_hits, "/ 12")
+    print("Answerable expected-fact hits:", answerable_fact_hits, "/ 12")
+    print("Unanswerable fallback hits:", unanswerable_fallback_hits, "/ 2")
+    print("\nFailed questions:")
+    for failure in failures:
+        print(failure)
+
+    return failures
+
+
+# -------------------------
+# Task 5: tools
+# -------------------------
+
+def get_order(order_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            """
+            SELECT order_id, status, order_amount, delivery_minutes
+            FROM orders
+            WHERE order_id = ?
+            """,
+            (order_id,),
+        ).fetchone()
+
+    if row is None:
+        return {"error": "order not found"}
+
+    return {
+        "order_id": row["order_id"],
+        "status": row["status"],
+        "order_amount": row["order_amount"],
+        "delivery_minutes": row["delivery_minutes"],
+    }
+
+
+def search_policy(query):
+    return {"results": retrieve(query, k=3)}
+
+
+def calculate_refund(order_amount, delivery_minutes):
+    if delivery_minutes is not None and float(delivery_minutes) > 45:
+        refund = float(order_amount)
+    else:
+        refund = 0.0
+    return {"refund_inr": round(refund, 2)}
+
+
+def write_ledger(order_id, refund_inr, tool_name):
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "tool": tool_name,
+        "order_id": order_id,
+        "refund_inr": round(float(refund_inr), 2),
+    }
+    with LEDGER_PATH.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(entry) + "\n")
+    return {"refund_inr": round(float(refund_inr), 2)}
+
+
+def issue_refund(order_id, refund_inr):
+    return write_ledger(order_id, refund_inr, "issue_refund")
+
+
+def escalate_to_human(order_id, refund_inr):
+    return write_ledger(order_id, refund_inr, "escalate_to_human")
+
+
+TOOLS_SPEC = [
+    {
+        "name": "get_order",
+        "description": "Look up an order in the Instamart database.",
+        "parameters": {
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    },
+    {
+        "name": "search_policy",
+        "description": "Search the policy documents for relevant information.",
+        "parameters": {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "calculate_refund",
+        "description": "Calculate refund from order amount and delivery time.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "order_amount": {"type": "number"},
+                "delivery_minutes": {"type": ["number", "null"]},
+            },
+            "required": ["order_amount", "delivery_minutes"],
+        },
+    },
+    {
+        "name": "issue_refund",
+        "description": "Record an approved simulated automatic refund.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string"},
+                "refund_inr": {"type": "number"},
+            },
+            "required": ["order_id", "refund_inr"],
+        },
+    },
+    {
+        "name": "escalate_to_human",
+        "description": "Record a refund requiring human approval.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string"},
+                "refund_inr": {"type": "number"},
+            },
+            "required": ["order_id", "refund_inr"],
+        },
+    },
+]
+
+TOOL_MAP = {
+    "get_order": get_order,
+    "search_policy": search_policy,
+    "calculate_refund": calculate_refund,
+    "issue_refund": issue_refund,
+    "escalate_to_human": escalate_to_human,
+}
+
+
+# -------------------------
+# Task 6-8: ReAct loop, safeguards, checkpoints
+# -------------------------
+
+def save_checkpoint(run_id, state):
+    path = STATE_DIR / f"{run_id}.json"
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(state, file, indent=2)
+
+
+def load_checkpoint(run_id):
+    path = STATE_DIR / f"{run_id}.json"
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def _tool_call_fields(tool_call):
+    """The supplied mock emits SimpleNamespace calls with name/arguments directly."""
+    if hasattr(tool_call, "function"):
+        name = tool_call.function.name
+        arguments = tool_call.function.arguments
+    else:
+        name = tool_call.name
+        arguments = tool_call.arguments
+
+    if isinstance(arguments, str):
+        arguments = json.loads(arguments)
+    return name, arguments
+
+
+def run_agent(
+    scenario_id,
+    order_id,
+    run_id=None,
+    token_limit=6000,
+    time_limit_seconds=30,
+    max_iterations=10,
+    resume=False,
+    crash_after_tool=None,
+):
+    if run_id is None:
+        run_id = str(uuid.uuid4())
+
+    started_at = time.monotonic()
+
+    if resume:
+        state = load_checkpoint(run_id)
+        messages = state["messages"]
+        tokens_used = state["tokens_used"]
+        tool_executions = state["tool_executions"]
+        model_calls = state["model_calls"]
+        step = state["step"]
+    else:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "AGENT: You are a safe Instamart refund support agent. "
+                    "Use tools to inspect orders and policy. Only completed "
+                    "orders may be refunded. Late delivery is over 45 minutes. "
+                    "Refunds above INR 1000 require human approval. Never issue "
+                    "a refund before checking order status."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Please review the refund request for order {order_id}.",
+            },
+        ]
+        tokens_used = 0
+        tool_executions = []
+        model_calls = 0
+        step = 0
+
+    while model_calls < max_iterations:
+        if time.monotonic() - started_at >= time_limit_seconds:
+            return {
+                "run_id": run_id,
+                "scenario_id": scenario_id,
+                "status": "FALLBACK_TIMEOUT",
+                "final_answer": "Human handoff: agent time limit reached.",
+                "tokens_used": tokens_used,
+                "model_calls": model_calls,
+                "tool_executions": tool_executions,
+            }
+
+        response = mock_llm.chat(messages, tools=TOOLS_SPEC)
+        model_calls += 1
+        tokens_used += response.usage.total_tokens
+
+        if tokens_used > token_limit:
+            return {
+                "run_id": run_id,
+                "scenario_id": scenario_id,
+                "status": "FALLBACK_TOKEN_LIMIT",
+                "final_answer": "Human handoff: token limit reached.",
+                "tokens_used": tokens_used,
+                "model_calls": model_calls,
+                "tool_executions": tool_executions,
+            }
+
+        message = response.choices[0].message
+        tool_calls = getattr(message, "tool_calls", None)
+
+        if not tool_calls:
+            final_answer = message.content or "Human handoff: no final answer."
+            status = final_answer.split(":", 1)[0]
+            return {
+                "run_id": run_id,
+                "scenario_id": scenario_id,
+                "status": status,
+                "final_answer": final_answer,
+                "tokens_used": tokens_used,
+                "model_calls": model_calls,
+                "tool_executions": tool_executions,
+            }
+
+        # The mock's tool results are read from role="tool" messages.
+        # Save each observation immediately so a resume does not repeat a tool.
+        for tool_call in tool_calls:
+            tool_name, arguments = _tool_call_fields(tool_call)
+            if tool_name not in TOOL_MAP:
+                observation = {"error": f"unknown tool: {tool_name}"}
+            else:
+                observation = TOOL_MAP[tool_name](**arguments)
+
+            tool_executions.append(tool_name)
+            step += 1
+
+            tool_message = {
+                "role": "tool",
+                "name": tool_name,
+                "content": json.dumps(observation),
+                "tool_call_id": getattr(tool_call, "id", f"call_{step}"),
+            }
+            messages.append(tool_message)
+
+            state = {
+                "run_id": run_id,
+                "scenario_id": scenario_id,
+                "messages": messages,
+                "tokens_used": tokens_used,
+                "tool_executions": tool_executions,
+                "model_calls": model_calls,
+                "step": step,
+            }
+            save_checkpoint(run_id, state)
+
+            if crash_after_tool is not None and step == crash_after_tool:
+                raise RuntimeError("SIMULATED_CRASH")
+
+    return {
+        "run_id": run_id,
+        "scenario_id": scenario_id,
+        "status": "FALLBACK_MAX_ITERATIONS",
+        "final_answer": "Human handoff: maximum agent iterations reached.",
+        "tokens_used": tokens_used,
+        "model_calls": model_calls,
+        "tool_executions": tool_executions,
+    }
+
+
+def append_agent_run(result):
+    with AGENT_RUNS_PATH.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(result) + "\n")
+
+
+if __name__ == "__main__":
+    # Run the requested Part D evaluation, then one simple agent smoke test.
+    print("\nPolicy Assistant Answer:")
+    policy_result = answer("What is the refund policy for late delivery?")
+    print(policy_result["answer"])
+    print("Sources Used:", policy_result["sources"])
+
+    evaluate(overlap=10)
+    evaluate(overlap=0)
+
+    print("\nTesting refund tools:")
+    print(get_order("ORD-110093"))
+    print(calculate_refund(128.25, 60))
+
+    print("\nTesting ReAct Agent:")
+    agent_result = run_agent(
+        scenario_id="TEST-1",
+        order_id="ORD-110093",
+    )
+    print(agent_result)

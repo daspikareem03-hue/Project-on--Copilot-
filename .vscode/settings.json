@@ -1,0 +1,12 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "DuckDB",
+            "name": "Instamart Database ",
+            "database": "c:\\Users\\Daspika\\downloads\\project on copilot\\data\\instamart.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

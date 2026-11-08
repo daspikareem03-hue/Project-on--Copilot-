@@ -1,0 +1,161 @@
+ticket_id,customer_id,predicted_category,segment_name,is_premium,assigned_team,priority
+T0024,C0486,fraud,Segment 3,False,Fraud Investigation Team,Critical
+T0073,C0080,billing,Segment 2,False,Billing Support Team,Medium
+T0095,C1087,technical,Segment 0,False,Technical Support Team,Normal
+T0080,C0910,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0124,C0139,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0061,C0812,billing,Segment 2,False,Billing Support Team,Medium
+T0118,C0355,delivery,Segment 2,False,Delivery Support Team,Medium
+T0037,C1156,billing,Premium,True,Billing Support Team,High
+T0002,C0881,delivery,Segment 0,False,Delivery Support Team,Medium
+T0163,C0322,delivery,Segment 2,False,Delivery Support Team,Medium
+T0031,C0958,technical,Segment 3,False,Technical Support Team,Normal
+T0047,C0756,technical,Segment 2,False,Technical Support Team,Normal
+T0063,C0892,technical,Segment 0,False,Technical Support Team,Normal
+T0121,C0852,billing,Segment 3,False,Billing Support Team,Medium
+T0139,C0829,technical,Segment 0,False,Technical Support Team,Normal
+T0115,C1025,technical,Segment 0,False,Technical Support Team,Normal
+T0123,C0674,technical,Segment 2,False,Technical Support Team,Normal
+T0116,C0294,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0136,C0891,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0008,C1177,fraud,Segment 3,False,Fraud Investigation Team,Critical
+T0102,C0985,delivery,Segment 0,False,Delivery Support Team,Medium
+T0072,C0218,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0101,C1151,billing,Segment 2,False,Billing Support Team,Medium
+T0059,C0764,technical,Segment 0,False,Technical Support Team,Normal
+T0049,C0078,billing,Segment 2,False,Billing Support Team,Medium
+T0153,C0150,billing,Segment 0,False,Billing Support Team,Medium
+T0050,C0117,delivery,Segment 3,False,Delivery Support Team,Medium
+T0147,C0125,technical,Segment 2,False,Technical Support Team,Normal
+T0074,C1119,delivery,Segment 2,False,Delivery Support Team,Medium
+T0156,C0328,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0145,C0751,billing,Segment 2,False,Billing Support Team,Medium
+T0053,C0447,billing,Segment 2,False,Billing Support Team,Medium
+T0134,C0608,delivery,Segment 3,False,Delivery Support Team,Medium
+T0039,C0298,technical,Segment 2,False,Technical Support Team,Normal
+T0016,C0962,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0055,C1063,technical,Segment 2,False,Technical Support Team,Normal
+T0130,C0692,delivery,Segment 3,False,Delivery Support Team,Medium
+T0099,C1000,technical,Premium,True,Technical Support Team,High
+T0062,C0403,delivery,Segment 0,False,Delivery Support Team,Medium
+T0013,C0507,billing,Segment 3,False,Billing Support Team,Medium
+T0137,C0978,billing,Segment 0,False,Billing Support Team,Medium
+T0152,C0530,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0144,C0521,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0094,C0863,delivery,Segment 0,False,Delivery Support Team,Medium
+T0021,C0909,billing,Segment 2,False,Billing Support Team,Medium
+T0077,C0082,billing,Premium,True,Billing Support Team,High
+T0036,C0173,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0113,C0077,billing,Segment 3,False,Billing Support Team,Medium
+T0060,C0784,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0043,C0942,technical,Premium,True,Technical Support Team,High
+T0048,C0733,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0154,C1071,delivery,Segment 0,False,Delivery Support Team,Medium
+T0125,C1156,billing,Premium,True,Billing Support Team,High
+T0146,C1024,delivery,Premium,True,Delivery Support Team,High
+T0107,C0783,technical,Segment 0,False,Technical Support Team,Normal
+T0011,C0233,technical,Segment 0,False,Technical Support Team,Normal
+T0017,C0028,billing,Segment 0,False,Billing Support Team,Medium
+T0111,C1033,technical,Segment 2,False,Technical Support Team,Normal
+T0041,C0464,billing,Segment 0,False,Billing Support Team,Medium
+T0120,C0208,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0122,C0404,delivery,Segment 0,False,Delivery Support Team,Medium
+T0001,C0851,billing,Segment 3,False,Billing Support Team,Medium
+T0064,C0848,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0092,C0585,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0038,C0882,delivery,Segment 3,False,Delivery Support Team,Medium
+T0155,C0285,technical,Segment 3,False,Technical Support Team,Normal
+T0104,C0815,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0012,C0335,fraud,Premium,True,Fraud Investigation Team,Critical
+T0084,C0569,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0051,C1049,technical,Segment 2,False,Technical Support Team,Normal
+T0143,C0339,technical,Segment 0,False,Technical Support Team,Normal
+T0035,C1175,technical,Segment 2,False,Technical Support Team,Normal
+T0028,C1036,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0100,C0754,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0022,C1160,delivery,Segment 0,False,Delivery Support Team,Medium
+T0082,C0168,delivery,Segment 2,False,Delivery Support Team,Medium
+T0127,C0976,technical,Segment 0,False,Technical Support Team,Normal
+T0162,C0665,delivery,Premium,True,Delivery Support Team,High
+T0109,C1080,billing,Segment 2,False,Billing Support Team,Medium
+T0046,C0442,delivery,Segment 0,False,Delivery Support Team,Medium
+T0081,C0559,billing,Segment 2,False,Billing Support Team,Medium
+T0007,C0682,technical,Premium,True,Technical Support Team,High
+T0068,C0208,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0085,C0031,billing,Segment 2,False,Billing Support Team,Medium
+T0075,C0901,technical,Segment 2,False,Technical Support Team,Normal
+T0052,C1005,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0066,C1199,delivery,Segment 0,False,Delivery Support Team,Medium
+T0151,C1011,technical,Segment 2,False,Technical Support Team,Normal
+T0131,C0069,technical,Segment 3,False,Technical Support Team,Normal
+T0006,C0177,delivery,Segment 3,False,Delivery Support Team,Medium
+T0135,C0303,technical,Segment 0,False,Technical Support Team,Normal
+T0079,C1128,technical,Segment 0,False,Technical Support Team,Normal
+T0040,C0256,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0093,C0131,billing,Segment 2,False,Billing Support Team,Medium
+T0089,C0860,billing,Segment 2,False,Billing Support Team,Medium
+T0034,C1188,delivery,Segment 0,False,Delivery Support Team,Medium
+T0033,C0714,billing,Segment 2,False,Billing Support Team,Medium
+T0087,C0797,technical,Segment 2,False,Technical Support Team,Normal
+T0009,C0758,billing,Segment 2,False,Billing Support Team,Medium
+T0108,C0340,fraud,Segment 3,False,Fraud Investigation Team,Critical
+T0054,C0571,delivery,Segment 0,False,Delivery Support Team,Medium
+T0025,C0610,billing,Segment 3,False,Billing Support Team,Medium
+T0004,C0721,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0148,C1057,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0088,C0852,fraud,Segment 3,False,Fraud Investigation Team,Critical
+T0030,C0015,delivery,Segment 3,False,Delivery Support Team,Medium
+T0067,C0704,technical,Segment 0,False,Technical Support Team,Normal
+T0029,C0885,billing,Segment 0,False,Billing Support Team,Medium
+T0129,C0237,billing,Segment 0,False,Billing Support Team,Medium
+T0105,C0063,billing,Segment 2,False,Billing Support Team,Medium
+T0045,C0628,billing,Segment 0,False,Billing Support Team,Medium
+T0069,C0491,billing,Segment 2,False,Billing Support Team,Medium
+T0010,C1190,delivery,Segment 2,False,Delivery Support Team,Medium
+T0023,C0400,technical,Segment 2,False,Technical Support Team,Normal
+T0106,C0197,delivery,Segment 2,False,Delivery Support Team,Medium
+T0015,C0488,technical,Premium,True,Technical Support Team,High
+T0091,C0796,technical,Segment 3,False,Technical Support Team,Normal
+T0126,C0996,delivery,Premium,True,Delivery Support Team,High
+T0096,C0324,fraud,Premium,True,Fraud Investigation Team,Critical
+T0149,C0770,billing,Segment 2,False,Billing Support Team,Medium
+T0070,C1150,delivery,Segment 2,False,Delivery Support Team,Medium
+T0026,C0677,delivery,Segment 3,False,Delivery Support Team,Medium
+T0097,C0932,billing,Segment 3,False,Billing Support Team,Medium
+T0132,C0282,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0027,C0232,technical,Segment 2,False,Technical Support Team,Normal
+T0119,C0629,technical,Segment 2,False,Technical Support Team,Normal
+T0058,C0287,delivery,Segment 2,False,Delivery Support Team,Medium
+T0110,C0056,delivery,Segment 0,False,Delivery Support Team,Medium
+T0018,C1135,delivery,Segment 2,False,Delivery Support Team,Medium
+T0032,C1139,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0003,C0591,technical,Segment 2,False,Technical Support Team,Normal
+T0042,C0508,delivery,Segment 2,False,Delivery Support Team,Medium
+T0056,C0140,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0114,C0619,delivery,Segment 0,False,Delivery Support Team,Medium
+T0083,C0356,technical,Segment 3,False,Technical Support Team,Normal
+T0138,C0720,delivery,Segment 0,False,Delivery Support Team,Medium
+T0057,C1199,billing,Segment 0,False,Billing Support Team,Medium
+T0076,C0418,fraud,Segment 3,False,Fraud Investigation Team,Critical
+T0019,C0579,technical,Segment 2,False,Technical Support Team,Normal
+T0103,C0499,technical,Segment 0,False,Technical Support Team,Normal
+T0164,C0794,delivery,Segment 0,False,Delivery Support Team,Medium
+T0090,C0322,delivery,Segment 2,False,Delivery Support Team,Medium
+T0112,C0432,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0133,C0717,billing,Premium,True,Billing Support Team,High
+T0014,C0579,delivery,Segment 2,False,Delivery Support Team,Medium
+T0020,C0460,fraud,Segment 2,False,Fraud Investigation Team,Critical
+T0142,C0605,delivery,Segment 0,False,Delivery Support Team,Medium
+T0086,C1132,delivery,Premium,True,Delivery Support Team,High
+T0141,C0376,billing,Segment 0,False,Billing Support Team,Medium
+T0044,C0862,fraud,Premium,True,Fraud Investigation Team,Critical
+T0117,C0465,billing,Segment 0,False,Billing Support Team,Medium
+T0078,C0586,delivery,Segment 0,False,Delivery Support Team,Medium
+T0140,C1173,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0071,C0966,technical,Segment 2,False,Technical Support Team,Normal
+T0161,C0202,delivery,Segment 2,False,Delivery Support Team,Medium
+T0150,C0622,delivery,Segment 0,False,Delivery Support Team,Medium
+T0065,C0205,billing,Segment 2,False,Billing Support Team,Medium
+T0128,C0467,fraud,Segment 0,False,Fraud Investigation Team,Critical
+T0005,C0404,billing,Segment 0,False,Billing Support Team,Medium
+T0098,C0343,delivery,Segment 0,False,Delivery Support Team,Medium
